@@ -358,7 +358,7 @@ class AIBehaviorAnalyzer {
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/spatial-defense.git
+git clone https://github.com/shortcut/SpacialDefender
 cd spatial-defense
 ```
 
