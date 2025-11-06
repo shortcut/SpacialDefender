@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-
 @main
 struct SpacialDefenderApp: App {
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
