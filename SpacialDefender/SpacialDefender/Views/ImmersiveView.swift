@@ -174,12 +174,96 @@ struct ImmersiveView: View {
                 indicator.position = [x, 0.5, z]
                 content.add(indicator)
             }
+            
+            // MARK: - Lighting Setup
+            /// **Lighting in RealityKit - Core Concepts:**
+            ///
+            /// **Why Lighting Matters:**
+            /// - Without lights, RealityKit uses only ambient lighting (flat, even illumination)
+            /// - Proper lighting reveals 3D depth through shadows and highlights
+            /// - Metallic materials REQUIRE lighting to show reflective properties
+            /// - Lighting dramatically improves visual quality and gameplay clarity
+            /// - https://developer.apple.com/documentation/realitykit/directionallight - Main API reference
+            /// - https://developer.apple.com/documentation/realitykit/light - Light properties
+            /// - https://developer.apple.com/documentation/realitykit/entity/transform - How to rotate lights
+            ///
+            /// **DirectionalLight Explained:**
+            /// - Simulates distant light source (like the sun)
+            /// - Emits parallel rays in one direction
+            /// - Position doesn't matter (infinite distance)
+            /// - Rotation/orientation DOES matter (sets ray direction)
+            /// - Most efficient light type for general scene illumination
+            
+            /// **Step 1: Create the DirectionalLight entity**
+            /// - DirectionalLight() is a convenience initializer
+            /// - Creates an Entity with a Light component automatically
+            /// - The Light component is configured as a directional light by default
+            let mainLight = DirectionalLight()
+            
+            /// **Step 2: Configure light intensity**
+            /// - Intensity is measured in lux (real-world light units)
+            /// - Typical values:
+            ///   - 500: Dim indoor lighting
+            ///   - 1000: Normal indoor lighting
+            ///   - 3000: Bright office lighting
+            ///   - 5000: Outdoor daylight
+            ///   - 10000+: Direct sunlight
+            /// - Vision Pro rendering: Sweet spot usually 1000-5000
+            mainLight.light.intensity = 4000
+            
+            /// **Step 3: Set light color (optional)**
+            /// - Default is white (neutral)
+            /// - Color affects mood and atmosphere
+            /// - UIColor for precise control, or named colors for simplicity
+            ///
+            /// **Color Temperature Guide:**
+            /// - Warm (sunset): UIColor(red: 1.0, green: 0.9, blue: 0.8, alpha: 1.0)
+            /// - Neutral (daylight): .white
+            /// - Cool (moonlight): UIColor(red: 0.8, green: 0.9, blue: 1.0, alpha: 1.0)
+            /// - Sci-fi (cyan): UIColor(red: 0.7, green: 1.0, blue: 1.0, alpha: 1.0)
+            mainLight.light.color = .cyan // Start with neutral
+            
+            /// **Step 4: Position the light (optional for directional)**
+            /// - For DirectionalLight, position doesn't affect lighting
+            /// - Set it anyway for scene organization and future reference
+            /// - Common practice: Place it "above" your scene conceptually
+            mainLight.position = [0, 3, 0] // 3 meters above origin
+            
+            /// **Step 5: Orient the light (CRITICAL for directional lights)**
+            /// - Rotation determines the direction light rays travel
+            /// - Think: "Where is the sun in the sky, and which way does it shine?"
+            ///
+            /// **Method A: Using look(at:from:relativeTo:)**
+            /// - Most intuitive: "Make light look at this target from this position"
+            /// - Parameters:
+            ///   - at: Point in space to aim at (target)
+            ///   - from: Position of the light source
+            ///   - relativeTo: Parent entity (nil = world space)
+            mainLight.look(
+                at: [0, 0, -2],  // Target: Center of enemy formation
+                from: [2, 4, 0], // Light position: Upper right front
+                relativeTo: nil  // World space coordinates
+            )
+            
+            /// **Method B: Manual rotation (alternative approach)**
+            /// - More control but requires understanding of quaternions or Euler angles
+            /// - Useful when you want specific angles
+            /// - Example: 45° downward angle from front
+            // let rotationAngle = Float.pi / 4 // 45 degrees in radians
+            // mainLight.orientation = simd_quatf(angle: -rotationAngle, axis: [1, 0, 0])
+            
+            /// **Step 6: Add light to scene**
+            /// - Same as adding any entity
+            /// - Light becomes active immediately
+            /// - All entities in scene will be affected
+            content.add(mainLight)
+            
+            
             /// **Future Enhancements (Phase 2 continuation):**
             /// - Add collision components for hit detection
             /// - Implement rotation animations
             /// - Add particle effects for visual appeal
             /// - Create anchor entity for organized hierarchy
-            /// - Add lighting for better visual depth
         }
     }
 }
