@@ -25,12 +25,22 @@ import Foundation // provides access to mathematical constants like .pi
 /// - Position calculations happen on main thread
 /// - Future optimization: Entity pooling and culling systems
 struct ImmersiveView: View {
+    /// **State Management for Animation:**
+    /// - @State allows SwiftUI to track changes to variables
+    /// - When rotation changes, SwiftUI knows to update the view
+    /// - Persists across view updates (doesn't reset each render)
+    /// - Each entity gets its own rotation state for independent control
+    @State private var cubeRotation: Float = 0.0      // Red cube (basicEnemy)
+    @State private var sphereRotation: Float = 0.0    // Yellow sphere (fastEnemy)
+    @State private var cylinderRotation: Float = 0.0  // Gray cylinder (tankEnemy)
+
     var body: some View {
         /// **RealityView Explanation**
         /// - SwiftUI wrapper for RealityKit 3D content
         /// - `content` parameter is a RealityViewContent - the 3D scene container
         /// - All 3D entities must be added to `content` to be visible
-        /// - Closure executes once when view appears (not on every frame)
+        /// - First closure executes once when view appears (setup)
+        /// - Second `update:` closure executes every frame (for animations)
         RealityView { content in
             /// **MeshResource.generateBox() Explanation:**
             /// - Creates cubic 3D geometry with equal width/height/depth
@@ -66,6 +76,12 @@ struct ImmersiveView: View {
             /// - SIMD3<Float> format: [x, y, z] array notation
             basicEnemy.position = [-1.5, 1, -2]
 
+            /// **Entity Naming for Lookup:**
+            /// - Give entity a unique, descriptive name
+            /// - Used to find entity later in update closure
+            /// - Names are more reliable than position matching
+            /// - Standard practice in game development
+            basicEnemy.name = "basicEnemy"
 
             /// **Adding to Scene:**
             /// - content.add() makes entity visible in 3D space
@@ -99,6 +115,12 @@ struct ImmersiveView: View {
             /// - Y=1: Above ground plane, matches user's standing eye level
             /// - Z=-2: Close enough to see details, far enough to not feel invasive
             fastEnemy.position = [0, 1, -2]
+
+            /// **Entity Naming:**
+            /// - Unique name for lookup in update closure
+            /// - Consistent naming convention: entityType + "Enemy"
+            fastEnemy.name = "fastEnemy"
+
             content.add(fastEnemy)
 
             // MARK: - Tank Enemy Prototype (Gray Cylinder)
@@ -131,6 +153,12 @@ struct ImmersiveView: View {
             /// - Creates visual balance: Basic (left), Fast (center), Tank (right)
             /// - 1.5m spacing provides clear separation for identification
             tankEnemy.position = [1.5, 1, -2]
+
+            /// **Entity Naming:**
+            /// - Unique name for lookup in update closure
+            /// - Allows independent rotation control
+            tankEnemy.name = "tankEnemy"
+
             content.add(tankEnemy)
 
             // MARK: - Advanced: Circular Formation Demo
@@ -261,9 +289,84 @@ struct ImmersiveView: View {
             
             /// **Future Enhancements (Phase 2 continuation):**
             /// - Add collision components for hit detection
-            /// - Implement rotation animations
             /// - Add particle effects for visual appeal
             /// - Create anchor entity for organized hierarchy
+
+        } update: { content in
+            // MARK: - Reactive Animation Using @State
+            /// **State-Driven Animation Explanation:**
+            /// - The @State rotation variables change continuously via Timer
+            /// - SwiftUI detects changes and calls this update closure
+            /// - We apply the current rotation values to each entity
+            /// - Each entity has independent rotation control
+
+            /// **Rotate Red Cube (Basic Enemy):**
+            /// - Rotates around Y-axis (vertical spin)
+            /// - Speed: One full rotation every 3 seconds
+            /// - Standard "spinning top" rotation
+            if let basicEnemy = content.entities.first(where: { $0.name == "basicEnemy" }) {
+                basicEnemy.transform.rotation = simd_quatf(angle: cubeRotation, axis: [0, 1, 0])
+            }
+
+            /// **Rotate Yellow Sphere (Fast Enemy):**
+            /// - Also rotates around Y-axis (vertical spin)
+            /// - Speed: Faster than cube (one rotation per second)
+            /// - Sphere rotation is less visible, but demonstrates speed difference
+            if let fastEnemy = content.entities.first(where: { $0.name == "fastEnemy" }) {
+                fastEnemy.transform.rotation = simd_quatf(angle: sphereRotation, axis: [0, 1, 0])
+            }
+
+            /// **Rotate Gray Cylinder (Tank Enemy):**
+            /// - Rotates around X-axis (horizontal tumbling/pitching)
+            /// - Speed: Slower rotation (one rotation every 5 seconds)
+            /// - Different axis creates visual variety
+            /// - X-axis: [1, 0, 0] = forward/backward tumbling
+            if let tankEnemy = content.entities.first(where: { $0.name == "tankEnemy" }) {
+                tankEnemy.transform.rotation = simd_quatf(angle: cylinderRotation, axis: [1, 0, 0])
+            }
+        }
+        .onAppear {
+            // MARK: - Animation Timer
+            /// **Timer-Based Animation:**
+            /// - Runs every 1/60th second (60 FPS)
+            /// - Updates ALL @State rotation variables
+            /// - Each entity has independent rotation speed
+            /// - SwiftUI automatically triggers update closure
+            /// - Single timer is efficient (better than multiple timers)
+
+            Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
+                /// **Cube Rotation (Basic Enemy):**
+                /// - Full rotation (2π radians) in 3 seconds
+                /// - Calculation: 2π / 3 seconds / 60 frames = 0.0349 radians per frame
+                /// - Result: Moderate speed, easy to see
+                cubeRotation += Float.pi * 2.0 / 3.0 / 60.0
+
+                /// **Sphere Rotation (Fast Enemy):**
+                /// - Full rotation (2π radians) in 1 second
+                /// - Calculation: 2π / 1 second / 60 frames = 0.1047 radians per frame
+                /// - Result: 3x faster than cube (matches "fast" enemy type)
+                sphereRotation += Float.pi * 2.0 / 1.0 / 60.0
+
+                /// **Cylinder Rotation (Tank Enemy):**
+                /// - Full rotation (2π radians) in 5 seconds
+                /// - Calculation: 2π / 5 seconds / 60 frames = 0.0209 radians per frame
+                /// - Result: Slower, steady rotation (matches "heavy" tank feel)
+                cylinderRotation += Float.pi * 2.0 / 5.0 / 60.0
+
+                /// **Keep rotations in 0 to 2π range:**
+                /// - After 360° (2π), wrap back to 0°
+                /// - Prevents values from growing infinitely large
+                /// - Maintains numerical precision
+                if cubeRotation > Float.pi * 2 {
+                    cubeRotation -= Float.pi * 2
+                }
+                if sphereRotation > Float.pi * 2 {
+                    sphereRotation -= Float.pi * 2
+                }
+                if cylinderRotation > Float.pi * 2 {
+                    cylinderRotation -= Float.pi * 2
+                }
+            }
         }
     }
 }

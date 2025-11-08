@@ -91,8 +91,8 @@ A comprehensive, granular learning roadmap for building a fully immersive Apple 
 ## 🎮 PHASE 2: BASIC 3D & REALITYKIT
 *Learn RealityKit fundamentals and 3D rendering*
 
-**Phase 2 Progress: 12/21 tasks completed** 🚀
-**Outstanding Achievement**: User implemented multiple advanced concepts in single session, demonstrating exceptional learning velocity and technical comprehension. Recently mastered lighting fundamentals with DirectionalLight implementation.
+**Phase 2 Progress: 13/21 tasks completed** 🚀
+**Outstanding Achievement**: User implemented multiple advanced concepts in single session, demonstrating exceptional learning velocity and technical comprehension. Recently mastered lighting fundamentals with DirectionalLight implementation and successfully implemented rotation animations for all three enemy prototypes using Timer-based approach.
 
 ### Tasks 16-35: 3D Entities & Scene Management
 
@@ -146,9 +146,10 @@ A comprehensive, granular learning roadmap for building a fully immersive Apple 
     - *Concepts*: Custom geometry, parametric shapes
     - *Status*: COMPLETED - Gray cylinder (tank enemy) with metallic material and proper height/radius ratio
 
-25. **Add rotation animation to one entity**
-    - *Learn*: Basic animation with AnimationResource
-    - *Concepts*: Animation systems, keyframing
+25. **✅ Add rotation animation to one entity**
+    - *Learn*: Basic animation with AnimationResource, Timer-based animation patterns, SwiftUI @State for reactive updates
+    - *Concepts*: Animation systems, keyframing, quaternion rotation, frame-rate independent animation
+    - *Status*: COMPLETED (2025-11-08) - Implemented rotation for ALL THREE enemy prototypes using Timer + @State pattern. Red cube rotates on Y-axis (3s), yellow sphere rotates on Y-axis faster (1s), gray cylinder tumbles on X-axis (5s). Learned entity naming for lookup, multiple @State variables for independent control, and single Timer efficiency. Discovered update closure reliability issues in simulator and successfully pivoted to Timer-based approach.
 
 26. **✅ Position entities in a circle around origin**
     - *Learn*: Trigonometry for circular positioning
