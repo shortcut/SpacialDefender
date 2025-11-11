@@ -42,6 +42,19 @@ struct ImmersiveView: View {
         /// - First closure executes once when view appears (setup)
         /// - Second `update:` closure executes every frame (for animations)
         RealityView { content in
+            
+            /// **AnchorEntity - Scene Root for Game Content**
+            /// - **Purpose**: Acts as the root parent for all game entities (enemies, lights, indicators)
+            /// - **Benefits**:
+            ///   - Provides organized hierarchy instead of adding entities directly to content
+            ///   - Allows moving/rotating entire scene as a group by transforming one entity
+            ///   - Standard pattern for RealityKit scene organization
+            ///   - Makes entity management cleaner (can remove all game content by removing anchor)
+            /// - **Coordinate System**: Establishes origin point in immersive space where all game
+            ///   entities position relative to
+            /// - **Children**: All enemy prototypes, directional light, and circular position indicators
+            let sceneAnchor = AnchorEntity()
+            
             /// **MeshResource.generateBox() Explanation:**
             /// - Creates cubic 3D geometry with equal width/height/depth
             /// - `size` parameter: Float value in meters (real-world scale)
@@ -83,11 +96,12 @@ struct ImmersiveView: View {
             /// - Standard practice in game development
             basicEnemy.name = "basicEnemy"
 
-            /// **Adding to Scene:**
-            /// - content.add() makes entity visible in 3D space
-            /// - Entity becomes child of RealityView's root entity
-            /// - Participates in rendering, collision detection, etc.
-            content.add(basicEnemy)
+            /// **Adding to Anchor Hierarchy:**
+            /// - sceneAnchor.addChild() makes entity a child of the anchor (not directly to content)
+            /// - Entity position is now RELATIVE to anchor's position (local space, not world space)
+            /// - Anchor acts as parent: moving anchor moves all children together
+            /// - Better organization: all game entities under one parent for easy management
+            sceneAnchor.addChild(basicEnemy)
 
             // MARK: - Fast Enemy Prototype (Yellow Sphere)
             /// **Purpose**: Quick, agile enemy that's harder to hit
@@ -121,7 +135,7 @@ struct ImmersiveView: View {
             /// - Consistent naming convention: entityType + "Enemy"
             fastEnemy.name = "fastEnemy"
 
-            content.add(fastEnemy)
+            sceneAnchor.addChild(fastEnemy)
 
             // MARK: - Tank Enemy Prototype (Gray Cylinder)
             /// **Purpose**: High-health enemy requiring multiple hits
@@ -159,7 +173,7 @@ struct ImmersiveView: View {
             /// - Allows independent rotation control
             tankEnemy.name = "tankEnemy"
 
-            content.add(tankEnemy)
+            sceneAnchor.addChild(tankEnemy)
 
             // MARK: - Advanced: Circular Formation Demo
             /// **Purpose**: Demonstrate mathematical positioning for future spawning
@@ -200,7 +214,7 @@ struct ImmersiveView: View {
                 let indicatorMaterial = SimpleMaterial(color: .blue, isMetallic: false)
                 let indicator = ModelEntity(mesh: indicatorMesh, materials: [indicatorMaterial])
                 indicator.position = [x, 0.5, z]
-                content.add(indicator)
+                sceneAnchor.addChild(indicator)
             }
             
             // MARK: - Lighting Setup
@@ -284,7 +298,14 @@ struct ImmersiveView: View {
             /// - Same as adding any entity
             /// - Light becomes active immediately
             /// - All entities in scene will be affected
-            content.add(mainLight)
+            sceneAnchor.addChild(mainLight)
+            
+            /// **Add Anchor to scene**
+            /// - CRITICAL: The anchor and all its children are only visible after adding to content
+            /// - This single line makes the entire entity hierachy rendable
+            /// - All children (enemies, indicators, light= become visible when anchor is added
+            /// - Without this, nothing appears in the 3D scene
+            content.add(sceneAnchor)
             
             
             /// **Future Enhancements (Phase 2 continuation):**
@@ -299,12 +320,21 @@ struct ImmersiveView: View {
             /// - SwiftUI detects changes and calls this update closure
             /// - We apply the current rotation values to each entity
             /// - Each entity has independent rotation control
+            
+            /// **Finding Entities in Anchor Hierarchy:**
+            /// - First, find the sceneAnchor from content
+            /// - Then search the anchor's children (not content's children)
+            /// - Entities are nested: content → sceneAnchor → game entities
+            /// - Must navigate hierarchy correctly to find entities
+            guard let anchor = content.entities.first(where: { $0 is AnchorEntity }) else {
+                return
+            }
 
             /// **Rotate Red Cube (Basic Enemy):**
             /// - Rotates around Y-axis (vertical spin)
             /// - Speed: One full rotation every 3 seconds
             /// - Standard "spinning top" rotation
-            if let basicEnemy = content.entities.first(where: { $0.name == "basicEnemy" }) {
+            if let basicEnemy = anchor.children.first(where: { $0.name == "basicEnemy" }) {
                 basicEnemy.transform.rotation = simd_quatf(angle: cubeRotation, axis: [0, 1, 0])
             }
 
@@ -312,7 +342,7 @@ struct ImmersiveView: View {
             /// - Also rotates around Y-axis (vertical spin)
             /// - Speed: Faster than cube (one rotation per second)
             /// - Sphere rotation is less visible, but demonstrates speed difference
-            if let fastEnemy = content.entities.first(where: { $0.name == "fastEnemy" }) {
+            if let fastEnemy = anchor.children.first(where: { $0.name == "fastEnemy" }) {
                 fastEnemy.transform.rotation = simd_quatf(angle: sphereRotation, axis: [0, 1, 0])
             }
 
@@ -321,7 +351,7 @@ struct ImmersiveView: View {
             /// - Speed: Slower rotation (one rotation every 5 seconds)
             /// - Different axis creates visual variety
             /// - X-axis: [1, 0, 0] = forward/backward tumbling
-            if let tankEnemy = content.entities.first(where: { $0.name == "tankEnemy" }) {
+            if let tankEnemy = anchor.children.first(where: { $0.name == "tankEnemy" }) {
                 tankEnemy.transform.rotation = simd_quatf(angle: cylinderRotation, axis: [1, 0, 0])
             }
         }

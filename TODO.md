@@ -156,13 +156,15 @@ A comprehensive, granular learning roadmap for building a fully immersive Apple 
     - *Concepts*: Math in game development, procedural placement
     - *Status*: COMPLETED - Advanced circular formation with 6 blue indicators using trigonometry (cos/sin)
 
-27. **Create AnchorEntity as scene root**
+27. **✅ Create AnchorEntity as scene root**
     - *Learn*: Anchor concepts and coordinate systems
     - *Concepts*: Scene anchoring, reference frames
+    - *Status*: COMPLETED (2025-11-11) - Created AnchorEntity() as root parent for all game entities (enemies, lights, indicators). Refactored all content.add() calls to sceneAnchor.addChild() for proper hierarchy. Learned parent-child relationships, local vs world space coordinates, and how entity searching works in hierarchies (must search anchor.children, not content.entities). Fixed animation system to navigate hierarchy correctly.
 
-28. **Add entities to anchor and anchor to scene**
+28. **✅ Add entities to anchor and anchor to scene**
     - *Learn*: Scene hierarchy and entity parenting
     - *Concepts*: Object hierarchies, scene management
+    - *Status*: COMPLETED (2025-11-11) - Implemented as part of Task 27. All entities added as children of sceneAnchor using addChild(), then anchor added to content with content.add(sceneAnchor). This creates proper hierarchy for scene management.
 
 29. **✅ Experiment with different materials (metallic, emissive)**
     - *Learn*: Advanced material properties
