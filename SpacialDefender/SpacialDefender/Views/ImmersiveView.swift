@@ -153,12 +153,43 @@ struct ImmersiveView: View {
                 radius: GameConstants.Enemy.tankSize / 2  // 0.2m radius
             )
 
-            /// **Metallic Material Properties:**
-            /// - `isMetallic: true`: Reflects environment, appears shiny
-            /// - More expensive rendering due to reflection calculations
-            /// - Gray + metallic = realistic metal appearance
-            /// - Communicates "armored" or "industrial" to player
-            let tankMaterial = SimpleMaterial(color: .gray, isMetallic: true)
+            /// **PhysicallyBasedMaterial (PBR) - Realistic Lighting Response:**
+            /// - PBR materials respond to lighting like real-world surfaces
+            /// - Uses physics-based rendering for accurate light interaction
+            /// - Much more expensive than SimpleMaterial but dramatically more realistic
+            /// - Shows highlights, shadows, reflections, and environmental lighting
+            /// - Essential for realistic/immersive visual styles
+            ///
+            /// **baseColor Property:**
+            /// - The underlying surface color (what color is the material?)
+            /// - PhysicallyBasedMaterial.BaseColor(tint:) sets the color
+            /// - Similar to SimpleMaterial's color, but interacts with lighting
+            /// - Gray chosen for industrial/armored aesthetic
+            ///
+            /// **metallic Property:**
+            /// - Controls how metallic the surface appears (0.0 = non-metal, 1.0 = pure metal)
+            /// - Metallic surfaces reflect environment like mirrors
+            /// - Non-metallic surfaces diffuse light (like plastic or wood)
+            /// - Value of 1.0 = fully metallic (like polished steel or chrome)
+            /// - Metal surfaces show colored reflections from lights
+            ///
+            /// **roughness Property:**
+            /// - Controls surface smoothness (0.0 = mirror smooth, 1.0 = completely matte)
+            /// - Smooth surfaces (low roughness) = sharp, clear reflections
+            /// - Rough surfaces (high roughness) = blurry, diffused reflections
+            /// - Value of 0.2 = fairly shiny with slight surface texture
+            /// - Balances visual interest with clear reflections
+            ///
+            /// **Performance Impact:**
+            /// - PBR is much more expensive than SimpleMaterial
+            /// - Calculates light bounces, reflections, and surface interactions
+            /// - Vision Pro can handle it, but be mindful when spawning many enemies
+            /// - Future optimization: Consider SimpleMaterial for distant enemies
+            //let tankMaterial = SimpleMaterial(color: .gray, isMetallic: true)
+            var tankMaterial = PhysicallyBasedMaterial()
+            tankMaterial.baseColor = PhysicallyBasedMaterial.BaseColor(tint: .gray)
+            tankMaterial.metallic = .init(floatLiteral: 1.0)
+            tankMaterial.roughness = .init(floatLiteral: 0.2)
 
             let tankEnemy = ModelEntity(mesh: tankMesh, materials: [tankMaterial])
 
@@ -263,7 +294,7 @@ struct ImmersiveView: View {
             /// - Neutral (daylight): .white
             /// - Cool (moonlight): UIColor(red: 0.8, green: 0.9, blue: 1.0, alpha: 1.0)
             /// - Sci-fi (cyan): UIColor(red: 0.7, green: 1.0, blue: 1.0, alpha: 1.0)
-            mainLight.light.color = .cyan // Start with neutral
+            mainLight.light.color = .cyan  // Start with neutral
             
             /// **Step 4: Position the light (optional for directional)**
             /// - For DirectionalLight, position doesn't affect lighting

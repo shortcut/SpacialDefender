@@ -91,8 +91,8 @@ A comprehensive, granular learning roadmap for building a fully immersive Apple 
 ## 🎮 PHASE 2: BASIC 3D & REALITYKIT
 *Learn RealityKit fundamentals and 3D rendering*
 
-**Phase 2 Progress: 13/21 tasks completed** 🚀
-**Outstanding Achievement**: User implemented multiple advanced concepts in single session, demonstrating exceptional learning velocity and technical comprehension. Recently mastered lighting fundamentals with DirectionalLight implementation and successfully implemented rotation animations for all three enemy prototypes using Timer-based approach.
+**Phase 2 Progress: 14/21 tasks completed** 🚀
+**Outstanding Achievement**: User implemented multiple advanced concepts in single session, demonstrating exceptional learning velocity and technical comprehension. Recently mastered lighting fundamentals with DirectionalLight implementation and successfully implemented rotation animations for all three enemy prototypes using Timer-based approach. Completed comprehensive visibility testing and discovered critical material system differences (SimpleMaterial vs PBR), making informed design decision for mixed material approach.
 
 ### Tasks 16-35: 3D Entities & Scene Management
 
@@ -171,9 +171,10 @@ A comprehensive, granular learning roadmap for building a fully immersive Apple 
     - *Concepts*: PBR materials, visual effects
     - *Status*: COMPLETED - Non-metallic materials for basic/fast enemies, metallic material for tank enemy
 
-30. **Test entity visibility from different angles**
+30. **✅ Test entity visibility from different angles**
     - *Learn*: How entities appear in 3D space
     - *Concepts*: 3D visualization, camera perspectives
+    - *Status*: COMPLETED (2025-11-11) - Systematically tested visibility from front, side, top-down, close-up, distance, and behind views. Discovered critical difference between SimpleMaterial (minimal lighting response, flat appearance) and PhysicallyBasedMaterial (dramatic lighting interaction, realistic highlights/reflections). Learned that SimpleMaterial is optimized for performance with consistent colors but ignores most lighting, while PBR materials respond realistically to DirectionalLight with proper highlights, shadows, and reflections. Made design decision to use mixed materials: SimpleMaterial for basic/fast enemies (performance + clarity) and PBR for tank enemy (visual hierarchy + armored aesthetic). This creates visual language where material type communicates enemy importance. Tested with light intensity adjustments (4000-10000 lux) and confirmed PBR shows dramatic improvement while SimpleMaterial remains largely unchanged.
 
 31. **Add collision components to entities**
     - *Learn*: CollisionComponent basics for future collision detection
