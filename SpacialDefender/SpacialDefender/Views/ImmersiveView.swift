@@ -49,7 +49,6 @@ struct ImmersiveView: View {
             ///   - Provides organized hierarchy instead of adding entities directly to content
             ///   - Allows moving/rotating entire scene as a group by transforming one entity
             ///   - Standard pattern for RealityKit scene organization
-            ///   - Makes entity management cleaner (can remove all game content by removing anchor)
             /// - **Coordinate System**: Establishes origin point in immersive space where all game
             ///   entities position relative to
             /// - **Children**: All enemy prototypes, directional light, and circular position indicators
