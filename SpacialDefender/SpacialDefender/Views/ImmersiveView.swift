@@ -96,6 +96,60 @@ struct ImmersiveView: View {
             /// - Standard practice in game development
             basicEnemy.name = "basicEnemy"
 
+            // MARK: Collision Component - Basic Enemy
+            /// **CollisionComponent Purpose:**
+            /// - Enables physics-based collision detection for this entity
+            /// - Creates an invisible "hitbox" that determines when entities overlap
+            /// - Essential for gameplay mechanics (shooting, enemy-player contact)
+            /// - Without this, entities pass through each other without detection
+            ///
+            /// **Why Add Collision Now:**
+            /// - Lays groundwork for Phase 5 (shooting system)
+            /// - No visible changes yet, but enables future bullet-enemy detection
+            /// - Better to add early than retrofit later
+            ///
+            /// **Performance Note:**
+            /// - CollisionComponents have minimal overhead when not actively colliding
+            /// - Simple shapes (box, sphere, capsule) are very efficient
+            /// - Vision Pro can handle hundreds of simple collision shapes
+
+            /// **Step 1: Define Collision Shape**
+            /// - ShapeResource defines the 3D volume used for collision detection
+            /// - Must match (or closely approximate) the visual geometry
+            /// - Box shape for cubic enemies - most efficient for cubes
+            let redEnemySize = GameConstants.Enemy.basicSize // 0.3 meters
+            let redCollisionShape = ShapeResource.generateBox(
+                size: .init(redEnemySize, redEnemySize, redEnemySize) // 0.3m × 0.3m × 0.3m cube
+            )
+
+            /// **Step 2: Create CollisionComponent**
+            /// - Wraps the shape with collision behavior settings
+            /// - `shapes`: Array of ShapeResources (can have multiple for complex objects)
+            /// - `mode`: Collision detection mode
+            /// - `filter`: Controls what this entity can collide with
+            ///
+            /// **Collision Modes Explained:**
+            /// - `.default`: Full physics simulation + collision events (chosen for enemies)
+            /// - `.trigger`: Collision events only, no physics (good for power-ups)
+            /// - `.static`: Immovable objects (good for walls/boundaries)
+            ///
+            /// **Collision Filters:**
+            /// - `.default`: Can collide with everything
+            /// - Later: Custom filters for bullet-only or enemy-only collisions
+            /// - Phase 5 will teach advanced filtering techniques
+            let redCollisionComponent = CollisionComponent(
+                shapes: [redCollisionShape],
+                mode: .default,  // Full collision detection + physics
+                filter: .default // Can collide with all entities
+            )
+
+            /// **Step 3: Attach Component to Entity**
+            /// - `.components.set()` adds or replaces a component
+            /// - Part of RealityKit's Entity-Component-System (ECS) architecture
+            /// - Multiple components can coexist: Transform, Model, Collision, etc.
+            /// - Entity now has collision detection capability
+            basicEnemy.components.set(redCollisionComponent)
+
             /// **Adding to Anchor Hierarchy:**
             /// - sceneAnchor.addChild() makes entity a child of the anchor (not directly to content)
             /// - Entity position is now RELATIVE to anchor's position (local space, not world space)
@@ -134,6 +188,42 @@ struct ImmersiveView: View {
             /// - Unique name for lookup in update closure
             /// - Consistent naming convention: entityType + "Enemy"
             fastEnemy.name = "fastEnemy"
+
+            // MARK: Collision Component - Fast Enemy
+            /// **Sphere Collision Optimization:**
+            /// - Sphere-to-sphere collision is THE fastest collision check in 3D physics
+            /// - Single distance calculation: if (distance < radius1 + radius2) → collision!
+            /// - No complex geometry comparisons needed
+            /// - Perfect for fast-moving enemies that need frequent collision checks
+            ///
+            /// **Why Spheres Are Fast:**
+            /// - Box collision: 15+ comparison operations
+            /// - Sphere collision: 1 distance calculation + 1 comparison
+            /// - Critical for performance when checking many bullets against many enemies
+
+            /// **Step 1: Calculate Collision Sphere**
+            /// - GameConstants.Enemy.fastSize = 0.2m (diameter of visual sphere)
+            /// - Sphere radius = diameter / 2 = 0.1m
+            /// - Must match visual mesh radius for accurate hit detection
+            let fastEnemyRadius = GameConstants.Enemy.fastSize // 0.2m diameter
+            let fastCollisionShape = ShapeResource.generateSphere(
+                radius: fastEnemyRadius / 2 // 0.1m radius, matches visual mesh
+            )
+
+            /// **Step 2: Create Collision Component**
+            /// - Same pattern as cube enemy but with sphere shape
+            /// - Sphere collisions will be used heavily in shooting mechanics
+            /// - Fast enemy + fast collision = optimal performance
+            let fastCollision = CollisionComponent(
+                shapes: [fastCollisionShape],
+                mode: .default,  // Full physics and collision detection
+                filter: .default // Can collide with all entities
+            )
+
+            /// **Step 3: Attach to Entity**
+            /// - Fast enemy now has optimal collision detection
+            /// - Ready for high-frequency collision checks (bullets!)
+            fastEnemy.components.set(fastCollision)
 
             sceneAnchor.addChild(fastEnemy)
 
@@ -203,6 +293,49 @@ struct ImmersiveView: View {
             /// - Unique name for lookup in update closure
             /// - Allows independent rotation control
             tankEnemy.name = "tankEnemy"
+
+            // MARK: Collision Component - Tank Enemy
+            /// **Capsule vs Cylinder Collision:**
+            /// - Visual mesh: Cylinder (flat top/bottom)
+            /// - Collision shape: Capsule (rounded top/bottom)
+            /// - **Why capsule is better:**
+            ///   1. Smoother collision response (no sharp edges to catch on)
+            ///   2. Better performance than cylinder in most physics engines
+            ///   3. Approximates cylinder closely enough for gameplay
+            ///   4. Prevents edge-case collision bugs with flat surfaces
+            ///
+            /// **When to Use Each Shape:**
+            /// - Box: Cubes, rectangular objects, walls
+            /// - Sphere: Round objects, simple fast checks
+            /// - Capsule: Cylinders, characters, tall objects
+            /// - Convex/Mesh: Only for complex static geometry (expensive!)
+
+            /// **Step 1: Create Capsule Collision Shape**
+            /// - Capsule = cylinder with hemispherical caps on top/bottom
+            /// - Height: 0.4m (matches visual cylinder height)
+            /// - Radius: 0.2m (matches visual cylinder radius)
+            /// - Slight approximation but gameplay-accurate
+            let tankSize = GameConstants.Enemy.tankSize // 0.4m
+            let tankCollisionShape = ShapeResource.generateCapsule(
+                height: tankSize,      // 0.4m tall
+                radius: tankSize / 2   // 0.2m radius
+            )
+
+            /// **Step 2: Create Collision Component**
+            /// - Tank enemy has more health, so accurate collision is important
+            /// - Capsule shape ensures bullets hit reliably from all angles
+            /// - No frustrating "shots passing through gaps" bugs
+            let tankCollision = CollisionComponent(
+                shapes: [tankCollisionShape],
+                mode: .default,  // Full physics simulation enabled
+                filter: .default // Collides with bullets, player, other entities
+            )
+
+            /// **Step 3: Attach to Entity**
+            /// - Tank now has robust collision detection
+            /// - Capsule shape handles rotation well (no edge cases)
+            /// - Ready for multi-hit gameplay mechanic
+            tankEnemy.components.set(tankCollision)
 
             sceneAnchor.addChild(tankEnemy)
 
@@ -338,11 +471,18 @@ struct ImmersiveView: View {
             /// - Without this, nothing appears in the 3D scene
             content.add(sceneAnchor)
             
-            
-            /// **Future Enhancements (Phase 2 continuation):**
-            /// - Add collision components for hit detection
-            /// - Add particle effects for visual appeal
-            /// - Create anchor entity for organized hierarchy
+
+            /// **Phase 2 Completion Status:**
+            /// - ✅ Basic 3D entities created (cube, sphere, cylinder)
+            /// - ✅ Materials and lighting implemented
+            /// - ✅ Rotation animations working
+            /// - ✅ Scene hierarchy with AnchorEntity
+            /// - ✅ Collision components added to all enemies
+            ///
+            /// **Future Enhancements (Phase 3-5):**
+            /// - Add hand tracking for input (Phase 3)
+            /// - Implement enemy spawning and movement systems (Phase 4)
+            /// - Add shooting mechanics and particle effects (Phase 5)
 
         } update: { content in
             // MARK: - Reactive Animation Using @State
